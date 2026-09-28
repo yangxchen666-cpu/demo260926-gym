@@ -8,3 +8,11 @@ dist/
 # Misc
 *.local
 .DS_Store
+
+# Python backend
+backend/.venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env

@@ -155,3 +155,38 @@ export interface Venue {
 - **搜索框**：细下划线改为 2px 粗边框矩形，聚焦变橙
 - **分页**：按钮与页码全部换 2px 黑边框，当前页橙底白字
 - 验证：`tsc` + `npm run build` 零错误，无旧类名残留
+
+### 2026-09-28 场馆类型筛选下拉
+
+- 搜索框下方新增类型下拉（单选原生 `<select>`，画报风粗边框 + 自定义箭头，左侧色点随选中类型显示橙/蓝/黑），选项「全部类型」+ 8 类（从数据动态派生排序）
+- 筛选与搜索叠加生效（AND），变化时页码重置为 1；顶部角标在有筛选时显示命中数
+- 新建 `src/typeColors.ts`（类别色映射从 VenueCard 挪出共享）、`src/components/TypeFilter.tsx`
+- 注：页眉标题由「场馆名录」调整为「场馆目录」（用户手动修改）
+
+### 2026-09-28 数据迁移 PostgreSQL（FastAPI + 服务端分页）
+
+数据源从 `public/venues.json` 迁移至本机 PostgreSQL，架构：React(Vite :5173) → `/api` proxy → FastAPI(uvicorn :8000) → PostgreSQL。
+
+**backend/**（新建，Python 3.14 + venv）：
+- `app/main.py`：`GET /api/venues?q=&type=&page=&page_size=`（返回 total/items）、`GET /api/venue-types`
+- `app/db.py`：psycopg3 连接池；动态 WHERE（`name/location ILIKE`、`type =`）+ COUNT + `ORDER BY id LIMIT/OFFSET`，全部参数化
+- `app/seed.py`：幂等建库（demo001）建表导入（TRUNCATE+INSERT），源数据 `data/venues.json`
+- 连接配置 `.env`（由 `.env.example` 复制填写，已被 .gitignore 排除）
+
+**前端**（`App.tsx` 数据层重构，组件零改动）：
+- 搜索/筛选/分页全部下沉 SQL；300ms 防抖触发请求；请求序号防竞态；响应后页码越界自动收缩；首屏加载屏 + 失败重试按钮（reloadTick）
+- 角标改为 `命中 N VENUES` / `N VENUES · 8 TYPES`（均来自接口）
+- `vite.config.ts`：server 与 preview 均配 `/api` → `http://localhost:8000`
+- `public/venues.json` 保留不再被前端引用（seed 源在 backend/data/）
+
+**运行方式**（双进程）：
+```
+# 后端
+cd backend && .venv/Scripts/uvicorn app.main:app --port 8000
+# 前端
+cd frontend && npm run dev
+# 重新导入数据
+cd backend && .venv/Scripts/python -m app.seed
+```
+
+**验证**：seed 120 条；API 首页 total=120/12 条、`q=上海&type=体育馆` 命中 1、`q=上海&type=游泳馆` 命中 0、第 10 页末条 id=120、types 8 类；Vite 代理 5173→8000 链路通；`tsc` + build 零错误
