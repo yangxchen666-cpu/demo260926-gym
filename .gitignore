@@ -1,0 +1,10 @@
+# Claude Code local config (contains API token)
+.claude/
+
+# Dependencies & build output
+node_modules/
+dist/
+
+# Misc
+*.local
+.DS_Store

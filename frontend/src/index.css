@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/*
+ * 「场馆名录」设计 token — 体育画报（Sports Pictorial）
+ * 意象：复古体育杂志 / 球衣号码 / 斜切色带
+ * - paper 暖白纸底 / ink 近黑 / flame 火焰橙（主强调）/ royal 宝蓝（次强调）
+ * - display 中文黑体 900 斜体大字为画报标志，正文同族常规字重
+ */
+@theme {
+  --color-paper: #f6f4ef;
+  --color-card: #ffffff;
+  --color-ink: #14120e;
+  --color-flame: #e8631c;
+  --color-royal: #1e4fd8;
+  --color-line: #d8d4ca;
+  --color-muted: #6b675c;
+
+  --font-display: "PingFang SC", "Microsoft YaHei", "HarmonyOS Sans SC",
+    system-ui, sans-serif;
+  --font-sans: "PingFang SC", "Microsoft YaHei", "HarmonyOS Sans SC", system-ui,
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 页首橙蓝双条纹：页面唯一的一次性绘制动画 */
+.pictorial-stripes {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pictorial-stripes > span {
+  display: block;
+  transform: skewX(-12deg) scaleX(0);
+  transform-origin: left;
+  animation: draw-stripe 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.pictorial-stripes > span:nth-child(1) {
+  height: 10px;
+  width: 100%;
+  background: var(--color-flame);
+  animation-delay: 0.1s;
+}
+
+.pictorial-stripes > span:nth-child(2) {
+  height: 5px;
+  width: 62%;
+  background: var(--color-royal);
+  animation-delay: 0.25s;
+}
+
+@keyframes draw-stripe {
+  from {
+    transform: skewX(-12deg) scaleX(0);
+  }
+  to {
+    transform: skewX(-12deg) scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pictorial-stripes > span {
+    animation: none;
+    transform: skewX(-12deg) scaleX(1);
+  }
+
+  .venue-thumb {
+    transition: none !important;
+  }
+}
