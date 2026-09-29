@@ -190,3 +190,20 @@ cd backend && .venv/Scripts/python -m app.seed
 ```
 
 **验证**：seed 120 条；API 首页 total=120/12 条、`q=上海&type=体育馆` 命中 1、`q=上海&type=游泳馆` 命中 0、第 10 页末条 id=120、types 8 类；Vite 代理 5173→8000 链路通；`tsc` + build 零错误
+
+### 2026-09-29 场馆详情页（卡片点击跳转）
+
+点击目录卡片跳转 `/venues/:id` 详情页，展示图片、名称、类型、简介、位置、开放时间、客服联系方式。
+
+**backend/**：
+- `data/venues.json` 补齐 `description` / `opening_hours` / `contact` 三字段（120 条，由 `scripts/enrich_venues.py` 按 id 种子确定性生成：类型化开放时段与简介句池、城市区号固话/400 热线，可重复执行）
+- `app/seed.py`：改为 `DROP TABLE + CREATE`（表结构始终与 JSON 一致）重建 8 列表
+- `app/main.py` + `app/db.py`：新增 `GET /api/venues/{venue_id}`（8 字段，404=venue not found，非整数 id 422）；列表接口保持 5 字段不变
+
+**前端**（引入 `react-router-dom` v7）：
+- `main.tsx` 挂 `BrowserRouter`；`App.tsx` 变路由壳（`/` 目录、`/venues/:id` 详情、`*` 重定向首页 + 路由切换回顶部）
+- 原 App 主体迁至 `pages/VenueDirectoryPage.tsx`，搜索/筛选/页码状态改存 URL（`?q=&type=&page=`，防抖写入 q）：详情返回精确还原、链接可分享
+- 新建 `pages/VenueDetailPage.tsx`：大图（缩略图同 seed 放大 1200/780，同比例不变形）+ 信息栅格（类型徽标/开放时间/位置/客服电话 tel: 链接）+ 简介；loading/404/错误重试齐备；标题随场馆名
+- `VenueCard.tsx` 整卡改为 `<Link>`（键盘可达）
+
+**验证**：`/api/venues/1` 返 8 字段、`9999`→404、`abc`→422、列表回归正常；Vite 代理与 SPA 回退（`/venues/42` 直达刷新）通；oxlint 仅存量同类 warning；tsc + build 零错误

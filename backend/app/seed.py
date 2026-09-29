@@ -40,24 +40,33 @@ def seed() -> None:
     )
 
     with psycopg.connect(DATABASE_URL) as conn:
+        # DROP + CREATE：表结构始终与 venues.json 字段一致（幂等重建）
+        conn.execute("DROP TABLE IF EXISTS venues")
         conn.execute(
             """
-            CREATE TABLE IF NOT EXISTS venues (
+            CREATE TABLE venues (
                 id integer PRIMARY KEY,
                 name text NOT NULL,
                 type text NOT NULL,
                 location text NOT NULL,
-                image text NOT NULL
+                image text NOT NULL,
+                description text NOT NULL,
+                opening_hours text NOT NULL,
+                contact text NOT NULL
             )
             """
         )
-        conn.execute("TRUNCATE venues")
         with conn.cursor() as cur:
             cur.executemany(
-                "INSERT INTO venues (id, name, type, location, image) "
-                "VALUES (%s, %s, %s, %s, %s)",
+                "INSERT INTO venues (id, name, type, location, image, "
+                "description, opening_hours, contact) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 [
-                    (v["id"], v["name"], v["type"], v["location"], v["image"])
+                    (
+                        v["id"], v["name"], v["type"], v["location"],
+                        v["image"], v["description"], v["opening_hours"],
+                        v["contact"],
+                    )
                     for v in venues
                 ],
             )

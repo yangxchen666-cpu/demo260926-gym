@@ -54,3 +54,28 @@ def fetch_types() -> list[str]:
         with conn.cursor() as cur:
             cur.execute("SELECT DISTINCT type FROM venues ORDER BY type")
             return [r[0] for r in cur.fetchall()]
+
+
+def fetch_venue(venue_id: int) -> dict | None:
+    """Return one venue with all fields, or None if the id is absent."""
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, type, location, image, description, "
+                "opening_hours, contact FROM venues WHERE id = %s",
+                (venue_id,),
+            )
+            row = cur.fetchone()
+
+    if row is None:
+        return None
+    return {
+        "id": row[0],
+        "name": row[1],
+        "type": row[2],
+        "location": row[3],
+        "image": row[4],
+        "description": row[5],
+        "opening_hours": row[6],
+        "contact": row[7],
+    }

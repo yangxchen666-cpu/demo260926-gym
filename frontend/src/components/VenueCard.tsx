@@ -1,9 +1,14 @@
+import { Link } from 'react-router-dom'
 import type { Venue } from '../types'
 import { typeColorClass } from '../typeColors'
 
 export default function VenueCard({ venue }: { venue: Venue }) {
   return (
-    <article className="group border-2 border-ink bg-card transition-colors hover:border-flame">
+    <Link
+      to={`/venues/${venue.id}`}
+      aria-label={`查看${venue.name}详情`}
+      className="group block border-2 border-ink bg-card transition-colors hover:border-flame focus-visible:outline-2 focus-visible:outline-flame"
+    >
       <div className="relative aspect-400/260 overflow-hidden bg-line/50">
         <span className="absolute left-2 top-2 z-10 bg-ink/85 px-1.5 py-0.5 font-display text-lg font-black italic leading-none tracking-widest text-paper">
           {String(venue.id).padStart(3, '0')}
@@ -27,6 +32,6 @@ export default function VenueCard({ venue }: { venue: Venue }) {
         </h3>
         <p className="mt-1.5 truncate text-sm text-muted">{venue.location}</p>
       </div>
-    </article>
+    </Link>
   )
 }
