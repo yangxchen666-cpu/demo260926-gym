@@ -7,12 +7,20 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      // 后段走 HTTPS（uvicorn 自签证书，secure: false 跳过代理侧验证）：
+      // 密码与 token 在发往后端的链路上加密；生产环境由反向代理终结 TLS
+      '/api': {
+        target: 'https://localhost:8000',
+        secure: false,
+      },
     },
   },
   preview: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': {
+        target: 'https://localhost:8000',
+        secure: false,
+      },
     },
   },
 })

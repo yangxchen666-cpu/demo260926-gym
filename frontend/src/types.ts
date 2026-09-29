@@ -12,3 +12,21 @@ export interface VenueDetail extends Venue {
   opening_hours: string
   contact: string
 }
+
+/** 注册/登录接口的公开用户字段 */
+export interface AuthUser {
+  id: number
+  username: string
+  email: string
+}
+
+/** 注册/登录成功响应（注册即登录，两端点同构） */
+export interface AuthResponse extends AuthUser {
+  token: string
+}
+
+/** GET /api/captcha 响应：image 为 data:image/svg+xml;base64,... */
+export interface CaptchaData {
+  captcha_id: string
+  image: string
+}

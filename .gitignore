@@ -16,3 +16,8 @@ __pycache__/
 
 # Secrets
 .env
+
+# TLS certs (self-signed local keys must not be committed)
+backend/certs/
+# Dev server log
+uvicorn.log

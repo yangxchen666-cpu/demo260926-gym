@@ -5,12 +5,15 @@ FastAPI + psycopg3 + PostgreSQL 的场馆目录 API（见根目录 CLAUDE.md 的
 ## 命令
 
 ```bash
-.venv/Scripts/uvicorn app.main:app --port 8000   # 无 --reload，改代码需手动重启
+.venv/Scripts/uvicorn app.main:app --port 8000 --ssl-keyfile certs/key.pem --ssl-certfile certs/cert.pem   # 无 --reload，改代码需手动重启
 .venv/Scripts/python -m app.seed                  # 幂等重建：DROP TABLE + CREATE + 导入 120 条
 .venv/Scripts/python scripts/enrich_venues.py     # 重新生成 venues.json 的 description/opening_hours/contact
+.venv/Scripts/python scripts/verify_auth.py       # 认证端点端到端验证（进程内起 :8001，无需先启动服务）
 ```
 
-无测试套件。数据库连接串在 `.env` 的 `DATABASE_URL`（已 gitignore，模板 `.env.example`），默认 `postgresql://postgres:postgres@localhost:5432/demo001`。
+无测试套件。数据库连接串在 `.env` 的 `DATABASE_URL`（已 gitignore，模板 `.env.example`），默认 `postgresql://postgres:postgres@localhost:5432/demo001`；`.env` 的 `JWT_SECRET` 用于登录 token 签名。
+
+**TLS**：`certs/`（已 gitignore）放自签证书，Vite 代理以 `https://localhost:8000` + `secure: false` 连后端，密码与 token 在发往后端的链路上加密。重新生成证书：`openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout certs/key.pem -out certs/cert.pem -subj "//CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"`
 
 ## 架构要点
 

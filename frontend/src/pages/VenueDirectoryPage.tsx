@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination'
 import SearchBar from '../components/SearchBar'
 import TypeFilter from '../components/TypeFilter'
 import VenueGrid from '../components/VenueGrid'
+import AuthButton from '../components/AuthButton'
 
 const PAGE_SIZE = 12
 
@@ -128,24 +129,28 @@ export default function VenueDirectoryPage() {
             <h1 className="-ml-2 font-display text-5xl font-black italic leading-none tracking-tight sm:-ml-3 sm:text-6xl">
               场馆目录
             </h1>
-            {status === 'ready' && (
-              <p
-                className="pb-1 text-sm font-medium tracking-widest text-muted"
-                aria-live="polite"
-              >
-                {counting ? (
-                  <>
-                    命中{' '}
-                    <span className="font-black text-flame">{total}</span>{' '}
-                    VENUES
-                  </>
-                ) : (
-                  <>
-                    {total} VENUES · {types.length} TYPES
-                  </>
-                )}
-              </p>
-            )}
+            {/* 右侧分组：分组右缘与卡片网格最右一列右缘对齐（同一容器的 padding 边缘） */}
+            <div className="flex items-center gap-4">
+              {status === 'ready' && (
+                <p
+                  className="pb-1 text-sm font-medium tracking-widest text-muted"
+                  aria-live="polite"
+                >
+                  {counting ? (
+                    <>
+                      命中{' '}
+                      <span className="font-black text-flame">{total}</span>{' '}
+                      VENUES
+                    </>
+                  ) : (
+                    <>
+                      {total} VENUES · {types.length} TYPES
+                    </>
+                  )}
+                </p>
+              )}
+              <AuthButton />
+            </div>
           </div>
           <div className="pictorial-stripes mt-5" aria-hidden="true">
             <span></span>

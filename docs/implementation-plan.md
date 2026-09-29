@@ -207,3 +207,39 @@ cd backend && .venv/Scripts/python -m app.seed
 - `VenueCard.tsx` 整卡改为 `<Link>`（键盘可达）
 
 **验证**：`/api/venues/1` 返 8 字段、`9999`→404、`abc`→422、列表回归正常；Vite 代理与 SPA 回退（`/venues/42` 直达刷新）通；oxlint 仅存量同类 warning；tsc + build 零错误
+
+### 2026-09-29 用户注册/登录（模态弹窗 + 图片验证码 + JWT）
+
+右上角入口（目录页与卡片网格右缘对齐、详情页与内容容器对齐）打开模态弹窗：注册（用户名/邮箱/密码/确认密码，成功即登录）、登录（邮箱/密码/图片验证码/记住登录状态）。登录后右上角显示用户名 +「退出」。
+
+**backend/**：
+- `app/captcha.py`（新建）：纯代码 SVG 验证码（去混淆字符集、逐字符旋转抖动、干扰线噪点、画报三色），进程内 dict 存储 + `threading.Lock`，TTL 5 分钟，**先 pop 后比对**（一次性，防重放）
+- `app/auth.py`（新建）：标准库 `hashlib.scrypt` 密码哈希（参数随哈希串存储，比较用 `hmac.compare_digest`）、pyjwt HS256 token（记住 30 天 / 会话 1 天，`sub` 为字符串）、`CREATE TABLE IF NOT EXISTS users`（lifespan 幂等建表，与 seed 的 venues 重建完全解耦）、`authenticate`（用户不存在与密码错误统一返回 None 防枚举）
+- `app/main.py`：+4 端点——`POST /api/auth/register`（201 即登录，409 冲突中文提示，两次密码不一致 422）、`GET /api/captcha`（`Cache-Control: no-store`）、`POST /api/auth/login`（固定校验顺序：验证码→用户→密码；验证码 400 区分过期/错误）、`GET /api/me`（手动解析 Bearer 头，失败统一 401）；项目首个 pydantic `BaseModel` 使用（`Field` pattern 校验邮箱，不用 `EmailStr` 省 email-validator 依赖）
+- 依赖：+`pyjwt`（纯 Python，无 3.14 wheel 风险）；`.env.example` +`JWT_SECRET` 模板
+- users 表结构：`id bigint GENERATED ALWAYS AS IDENTITY` / `username`、`email`（存小写）均 UNIQUE / `password_hash` / `created_at`
+
+**frontend/**（零新依赖）：
+- `src/auth.tsx`（新建）：`AuthProvider` + `useAuth`（user/status/login/register/logout）；token 按勾选存 localStorage（30 天免登录）或 sessionStorage（关浏览器失效）；刷新时凭 token 调 `/api/me` 恢复登录态，失效自动清理
+- `src/components/AuthModal.tsx`（新建）：模态弹窗，登录/注册视图切换（保留邮箱清密码）、ESC/遮罩关闭、锁背景滚动；前端中文预校验同服务端规则，pydantic 数组型 detail 显示通用文案；**登录失败自动刷新验证码**（旧码已被消费）、图片点击刷新
+- `src/components/AuthButton.tsx`（新建）：checking 态不渲染（避免闪现）；访客显「登录」，登录后显用户名（truncate）+「退出」
+- 两页 header 的 `justify-between` 行右侧包 `flex items-center gap-4` 分组（统计文本 + AuthButton）；`main.tsx` 挂 `AuthProvider`
+- 已知 warning：`auth.tsx` only-export-components（Provider 与 hook 同文件，Fast Refresh 提示，接受）
+
+**验证**：`scripts/verify_auth.py`（进程内起 uvicorn:8001，直读验证码存储拿明文）23 项全过——注册/冲突/校验/验证码一次性（重放拒绝）/大小写不敏感/token 30 天与 1 天/me 三态/venues 回归；8000 端口 curl 抽查（captcha no-store、注册 201、重复 409、me 200/401/401）；Vite 代理 5173→8000 通；`tsc` + build 零错误
+
+**语义边界（demo 级）**：JWT 无服务端撤销（改密全端登出做不到）；sessionStorage 不跨标签页；username 大小写敏感可分别注册
+
+### 2026-09-29 后端链路上 HTTPS（密码/token 传输加密）
+
+用户指出登录密码明文发往后端。分析结论：根因是传输通道未加密而非缺前端加密——前端预哈希防不住 MITM/重放（pass-the-hash），且 JWT token 同样在裸链路上跑，只有 TLS 能同时保护两者（业界常规登录即 HTTPS + 表单 POST）。选型：**dev 后段加密**（Vite 代理 → uvicorn 走 HTTPS；浏览器到 5173 仍为本机 HTTP，免自签证书的浏览器警告干扰）。
+
+**改动**：
+- `backend/certs/`（新建，gitignore）：OpenSSL 自签证书 365 天，SAN 含 `localhost` + `127.0.0.1`（生成命令见 backend/CLAUDE.md）
+- 启动命令：`uvicorn app.main:app --port 8000 --ssl-keyfile certs/key.pem --ssl-certfile certs/cert.pem`
+- `frontend/vite.config.ts`：server/preview 的 `/api` 代理改 `{ target: 'https://localhost:8000', secure: false }`（自签证书跳过代理侧验证）
+- 前端业务代码零改动（fetch 相对路径不变）
+
+**生产部署形态**（未实施，仅指引）：反向代理终结 TLS → uvicorn 内网 HTTP。Caddy 两行即可且自动签发 Let's Encrypt：`example.com { reverse_proxy 127.0.0.1:8000 }`；nginx 用 `listen 443 ssl` + `proxy_pass http://127.0.0.1:8000`。
+
+**验证**：直连 `https://127.0.0.1:8000/api/venues` 200（TLS 协商成功）；经 5173 代理注册 201（密码走加密后段）；`verify_auth.py` 23 项回归全过；`.gitignore` 确认排除 `backend/certs/`

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { VenueDetail } from '../types'
 import { typeColorClass } from '../typeColors'
+import AuthButton from '../components/AuthButton'
 
 type Status = 'loading' | 'ready' | 'notfound' | 'error'
 
@@ -118,9 +119,12 @@ export default function VenueDetailPage() {
                 <h1 className="font-display text-4xl font-black italic leading-none tracking-tight sm:text-5xl">
                   {venue.name}
                 </h1>
-                <p className="pb-1 text-sm font-medium tracking-widest text-muted">
-                  VENUE NO.{String(venue.id).padStart(3, '0')}
-                </p>
+                <div className="flex items-center gap-4">
+                  <p className="pb-1 text-sm font-medium tracking-widest text-muted">
+                    VENUE NO.{String(venue.id).padStart(3, '0')}
+                  </p>
+                  <AuthButton />
+                </div>
               </div>
               <div className="pictorial-stripes mt-5" aria-hidden="true">
                 <span></span>
