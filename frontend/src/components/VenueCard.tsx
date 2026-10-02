@@ -32,6 +32,17 @@ export default function VenueCard({ venue }: { venue: Venue }) {
           {venue.name}
         </h3>
         <p className="mt-1.5 truncate text-sm text-muted">{venue.location}</p>
+        {/* 预留:预订流程后续接入;阻止冒泡以免触发卡片跳详情 */}
+        <button
+          type="button"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          className="mt-3 ml-auto block px-4 py-1 border-2 border-ink font-display text-sm font-black italic transition-colors hover:border-flame hover:bg-flame hover:text-paper focus-visible:outline-2 focus-visible:outline-flame"
+        >
+          预订
+        </button>
       </div>
     </Link>
   )
