@@ -14,7 +14,7 @@ export default function VenueGrid({ venues, query }: VenueGridProps) {
           未找到与「{query}」相关的场馆
         </p>
         <p className="mt-2 text-sm text-muted">
-          换个名称或城市试试，例如「体育馆」或「上海」
+          换个名称或城市试试，例如「羽毛球」或「上海」
         </p>
       </div>
     )

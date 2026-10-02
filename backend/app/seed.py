@@ -47,7 +47,7 @@ def seed() -> None:
             CREATE TABLE venues (
                 id integer PRIMARY KEY,
                 name text NOT NULL,
-                type text NOT NULL,
+                type text NOT NULL CHECK (type IN ('足球场', '篮球场', '羽毛球场', '网球场')),
                 location text NOT NULL,
                 image text NOT NULL,
                 description text NOT NULL,

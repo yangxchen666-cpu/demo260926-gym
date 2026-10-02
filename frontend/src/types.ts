@@ -1,7 +1,10 @@
+/** 场馆类型（DB 层 CHECK 约束，仅这四种合法值） */
+export type VenueType = '足球场' | '篮球场' | '羽毛球场' | '网球场'
+
 export interface Venue {
   id: number
   name: string
-  type: string
+  type: VenueType
   location: string
   image: string
 }
