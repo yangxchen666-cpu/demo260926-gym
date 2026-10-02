@@ -260,3 +260,12 @@ cd backend && .venv/Scripts/python -m app.seed
 - `VenueCard.tsx` 文字区底部新增整宽「预订」按钮：画报风 2px 黑边框 + 黑体 900 斜体，hover 橙底白字（与卡片 hover 边框、分页当前页同语言），纯复用既有 token
 - 本期不接功能：`onClick` 仅 `preventDefault + stopPropagation`（阻止触发整卡 `<Link>` 跳详情），代码注释标注预留
 - 验证：`tsc` + build 零错误；oxlint 无新增 warning（仅存量）
+
+### 2026-10-02 后台管理系统（admin-backend + admin-frontend）
+
+- 新增平级两目录：`admin-backend/`（FastAPI :9000，TLS 复用 backend/certs）+ `admin-frontend/`（Vite :5174），对同一 PostgreSQL demo001 的 venues/users 表做增删改查；现有 frontend/backend 链路零改动，零新依赖
+- 三项设计决策：① admin 直写数据库，`backend/data/venues.json` 降级为初始种子（重跑 seed = 恢复出厂，覆盖管理端对场馆的改动；users/admins 不受影响）——根/backend CLAUDE.md 数据源表述已同步改写；② 管理员用独立 `admins` 表 + 启动预置（.env 提供），不动 users 表；JWT 用独立 `ADMIN_JWT_SECRET` + `scope=admin` 声明（8 小时），与 backend secret 隔离——已实证「前台真实 secret 签的用户 token 打 admin 端点 → 401」；③ 管理端 UI 为中性灰白后台风（accent 蓝 + danger 红单主色），与前台画报风切割
+- 12 端点：登录（无验证码、防枚举统一 401）/me + venues、users 各 5 个 CRUD；场馆 id 用 `INSERT … SELECT COALESCE(MAX(id),0)+1` + 冲突重试 3 次（不改 identity——seed 会重建表）；用户 email 小写唯一、409 按约束名定位给中文提示；`PUT /api/users/{id}` 的 password 为 null/空串 = 不改密码
+- 前端：`RequireAdmin` 守卫（checking 渲染 null 不闪烁）+ 顶栏 Layout；列表页沿用 URL 状态/300ms 防抖/seq 防竞态模式；编辑页二合一（new 与 :id/edit 共用）；删除 `ConfirmDialog` 二次确认，404 视为「已被他人删除」刷新列表；token key `demo001-admin-token` 与前台隔离；`apiFetch` 统一 401 处理（清 token 整页跳登录）
+- 验证：`verify_admin.py` 54 项断言全过（含伪 secret、真 secret 无 scope 两类负向 token）；TLS 冒烟（登录/me/前台 token 401）通过；Vite 代理链路登录 200、无 token 401、建/查/改/删往返自清理；跨端实证 `seed_demo_check.py`：admin 建场馆 id=61 → 前台 :8000 `?q=` 可见 → 重跑 seed → 消失且前台回到 60 条（覆盖语义实锤）；admin-frontend `tsc` + build 零错误，oxlint warning 类型与 frontend 基线一致
+

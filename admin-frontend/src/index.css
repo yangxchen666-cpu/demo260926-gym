@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* 管理后台 · 中性灰白后台风：无装饰、高表格密度、单一主色
+   （与前台「体育画报」风刻意切割，class 必须字面量——Tailwind v4 按字面量编译） */
+@theme {
+  --color-bg: #f5f6f8;            /* 页面底 */
+  --color-surface: #ffffff;       /* 顶栏/表格/表单/弹窗 */
+  --color-line: #e3e6ea;          /* 边框与分隔线 */
+  --color-ink: #1c2128;           /* 主文字 */
+  --color-muted: #6b7280;         /* 次要文字/表头 */
+  --color-accent: #2563eb;        /* 主色：主按钮/链接/激活态 */
+  --color-accent-strong: #1d4ed8; /* 主色 hover */
+  --color-danger: #dc2626;        /* 删除按钮/错误文案 */
+  --font-sans: "PingFang SC", "Microsoft YaHei", "HarmonyOS Sans SC", system-ui,
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
