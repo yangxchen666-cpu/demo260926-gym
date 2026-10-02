@@ -243,3 +243,20 @@ cd backend && .venv/Scripts/python -m app.seed
 **生产部署形态**（未实施，仅指引）：反向代理终结 TLS → uvicorn 内网 HTTP。Caddy 两行即可且自动签发 Let's Encrypt：`example.com { reverse_proxy 127.0.0.1:8000 }`；nginx 用 `listen 443 ssl` + `proxy_pass http://127.0.0.1:8000`。
 
 **验证**：直连 `https://127.0.0.1:8000/api/venues` 200（TLS 协商成功）；经 5173 代理注册 201（密码走加密后段）；`verify_auth.py` 23 项回归全过；`.gitignore` 确认排除 `backend/certs/`
+
+### 2026-10-02 场馆类型收口为四类（足球/篮球/羽毛球/网球）
+
+类型限定为「足球场、篮球场、羽毛球场、网球场」，数据从 120 条（8 类 × 15）重整为 **60 条（4 类 × 15）**：删体育馆/游泳馆/剧院/音乐厅/会展中心共 75 条；篮球馆→篮球场、网球中心→网球场改名保留（名称语义兼容）；新造 15 条羽毛球场（北京光彩羽毛球馆等，城市均取自区号表保证 contact 可生成）。
+
+- `data/venues.json`：id 重排 1-60 并分组有序（足球 1-15 / 篮球 16-30 / 羽毛球 31-45 / 网球 46-60）；image 沿用 picsum seed 按名称 slug 风格
+- `scripts/enrich_venues.py`：HOURS/FACILITY/FEATURE/SERVICE 四句池同步收为 4 类键（新增羽毛球场句池），条数断言 120→60，重跑全量生成文案
+- `app/seed.py`：type 列加 `CHECK (type IN ('足球场','篮球场','羽毛球场','网球场'))`——DB 层强约束，seed 成功即证明 60 条全合规
+- 前端：`typeColors.ts` 收为 4 键（篮球场/网球场=橙，足球场/羽毛球场=蓝，三类沿用原色）；`types.ts` 新增 `VenueType` 联合类型收紧 `Venue.type`；`VenueGrid.tsx` 空态示例词「体育馆」→「羽毛球」；类型下拉/卡片/详情页均数据驱动自动跟随，无需改
+
+**验证**：seed 输出 60 条；`/api/venue-types` 恰 4 类；`?type=羽毛球场` 命中 15 条（id 31 起）；Vite 5173 代理 200；`tsc` + build 零错误
+
+### 2026-10-02 场馆卡片「预订」按钮（纯 UI 占位）
+
+- `VenueCard.tsx` 文字区底部新增整宽「预订」按钮：画报风 2px 黑边框 + 黑体 900 斜体，hover 橙底白字（与卡片 hover 边框、分页当前页同语言），纯复用既有 token
+- 本期不接功能：`onClick` 仅 `preventDefault + stopPropagation`（阻止触发整卡 `<Link>` 跳详情），代码注释标注预留
+- 验证：`tsc` + build 零错误；oxlint 无新增 warning（仅存量）

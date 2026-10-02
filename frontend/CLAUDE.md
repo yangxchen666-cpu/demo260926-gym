@@ -5,7 +5,7 @@ React 19 + TypeScript + Vite 8 + Tailwind CSS v4 的场馆目录 SPA（中文 UI
 ## 命令
 
 ```bash
-npm run dev      # Vite :5173，/api 代理到 http://localhost:8000（preview 同）
+npm run dev      # Vite :5173，/api 代理到 https://localhost:8000（uvicorn 自签证书，preview 同）
 npm run build    # tsc -b && vite build
 npm run lint     # oxlint
 ```
